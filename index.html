@@ -91,7 +91,10 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nomor Absen</label>
-                        <input type="number" id="absenSiswa" min="1" max="50" required placeholder="Contoh: 15" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm outline-none transition">
+                        <select id="absenSiswa" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm outline-none transition bg-white">
+                            <option value="" disabled selected>Pilih Absen</option>
+                            <!-- Opsi 1-36 akan dipopulasikan otomatis via JS -->
+                        </select>
                     </div>
                 </div>
 
@@ -288,6 +291,17 @@
         let timerInterval = null;
         let startTime = null;
 
+        // Populate Dropdown Nomor Absen 1 - 36
+        function initAbsenDropdown() {
+            const selectAbsen = document.getElementById('absenSiswa');
+            for (let i = 1; i <= 36; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = `Absen ${i}`;
+                selectAbsen.appendChild(opt);
+            }
+        }
+
         function checkPreviousAttempt(kelas, absen) {
             const key = `completed_quiz_${kelas}_${absen}`;
             return localStorage.getItem(key) !== null;
@@ -306,7 +320,7 @@
 
         function checkIdentityAvailability() {
             const kelas = document.getElementById('kelasSiswa').value;
-            const absen = document.getElementById('absenSiswa').value.trim();
+            const absen = document.getElementById('absenSiswa').value;
             const alertBox = document.getElementById('blockedAlert');
             const alertMsg = document.getElementById('blockedMessage');
             const btnStart = document.getElementById('btnStartQuiz');
@@ -326,7 +340,7 @@
         }
 
         document.getElementById('kelasSiswa').addEventListener('change', checkIdentityAvailability);
-        document.getElementById('absenSiswa').addEventListener('input', checkIdentityAvailability);
+        document.getElementById('absenSiswa').addEventListener('change', checkIdentityAvailability);
 
         function openTokenModal() {
             document.getElementById('inputTokenGuru').value = '';
@@ -341,7 +355,7 @@
         function verifyTeacherToken() {
             const tokenInput = document.getElementById('inputTokenGuru').value.trim();
             const kelas = document.getElementById('kelasSiswa').value;
-            const absen = document.getElementById('absenSiswa').value.trim();
+            const absen = document.getElementById('absenSiswa').value;
 
             if (tokenInput === SECRET_TEACHER_TOKEN) {
                 clearPreviousAttempt(kelas, absen);
@@ -404,7 +418,7 @@
         function startQuiz() {
             const nama = document.getElementById('namaSiswa').value.trim();
             const kelas = document.getElementById('kelasSiswa').value;
-            const absen = document.getElementById('absenSiswa').value.trim();
+            const absen = document.getElementById('absenSiswa').value;
             const scriptUrl = document.getElementById('scriptUrl').value.trim();
 
             if (!nama || !kelas || !absen) {
@@ -602,7 +616,10 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', restoreSessionIfExist);
+        window.addEventListener('DOMContentLoaded', () => {
+            initAbsenDropdown();
+            restoreSessionIfExist();
+        });
     </script>
 </body>
 </html>
