@@ -247,7 +247,7 @@
         const SECRET_TEACHER_TOKEN = "GURU2026";
         const TOTAL_DURATION_SECONDS = 90 * 60; // 90 Menit
 
-        const questionsData = [
+        const rawQuestionsData = [
             { id: 1, text: "Kata 'Ekonomi' berasal dari bahasa Yunani, yaitu Oikonomia, yang terdiri dari kata Oikos dan Nomos. Kata Oikos berarti ...", options: ["A. Aturan atau hukum", "B. Rumah tangga", "C. Kemakmuran", "D. Pengelolaan", "E. Kebutuhan"], answer: 1 },
             { id: 2, text: "Masalah pokok ekonomi yang dihadapi manusia pada dasarnya muncul karena ...", options: ["A. Kebutuhan manusia terbatas, sedangkan alat pemuas terbatas", "B. Kebutuhan manusia terbatas, sedangkan alat pemuas tidak terbatas", "C. Kebutuhan manusia tidak terbatas, sedangkan alat pemuas terbatas", "D. Kebutuhan manusia tidak terbatas, sedangkan alat pemuas tidak terbatas", "E. Pendapatan manusia selalu bertambah"], answer: 2 },
             { id: 3, text: "Seorang siswa SMA membutuhkan buku tulis, pulpen, kuota internet untuk belajar online, dan smartphone terbaru. Kebutuhan utama yang harus diprioritaskan sebagai pelajar adalah ...", options: ["A. Smartphone terbaru untuk menunjang gaya hidup", "B. Buku tulis dan pulpen untuk mencatat pelajaran", "C. Kuota internet tanpa perlu membeli buku", "D. Membeli semua barang secara bersamaan", "E. Menunda semua kebutuhan hingga akhir semester"], answer: 1 },
@@ -290,11 +290,22 @@
             { id: 40, text: "Prinsip utama dalam ilmu Ekonomi Syariah yang membedakannya secara mendasar dari ekonomi konvensional adalah ...", options: ["A. Mengejar keuntungan tanpa batasan modal", "B. Larangan riba, larangan gharar (ketidakpastian), dan penerapan prinsip keadilan/bagi hasil", "C. Penentuan seluruh harga sepenuhnya oleh otoritas pemerintah pusat", "D. Penghapusan hak milik pribadi atas alat produksi", "E. Penolakan terhadap perdagangan internasional"], answer: 1 }
         ];
 
+        let questionsData = [];
         let currentQuestion = 0;
-        let userAnswers = new Array(questionsData.length).fill(null);
+        let userAnswers = [];
         let studentData = {};
         let timerInterval = null;
         let startTime = null;
+
+        // Fungsi Acak Soal (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
 
         function initAbsenDropdown() {
             const selectAbsen = document.getElementById('absenSiswa');
@@ -396,6 +407,7 @@
                 studentData,
                 currentQuestion,
                 userAnswers,
+                questionsData,
                 startTime
             };
             localStorage.setItem('active_quiz_session', JSON.stringify(sessionData));
@@ -407,6 +419,7 @@
                 try {
                     const data = JSON.parse(savedSession);
                     studentData = data.studentData;
+                    questionsData = data.questionsData || rawQuestionsData;
                     currentQuestion = data.currentQuestion || 0;
                     userAnswers = data.userAnswers || new Array(questionsData.length).fill(null);
                     startTime = data.startTime || Date.now();
@@ -447,6 +460,11 @@
 
             studentData = { nama, kelas, absen, scriptUrl };
             startTime = Date.now();
+
+            // Mengacak urutan 40 soal khusus untuk sesi pengerjaan siswa ini
+            questionsData = shuffleArray(rawQuestionsData);
+            userAnswers = new Array(questionsData.length).fill(null);
+
             saveCurrentSession();
 
             document.getElementById('identitasSection').classList.add('hidden');
