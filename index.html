@@ -24,12 +24,12 @@
                 <i class="fas fa-chart-line text-2xl text-amber-400"></i>
                 <div>
                     <h1 class="font-bold text-lg leading-tight">Ulangan Harian Ekonomi</h1>
-                    <p class="text-xs text-indigo-200">Materi: Konsep Dasar Ilmu Ekonomi</p>
+                    <p class="text-xs text-indigo-200">Materi: Konsep Dasar Ilmu Ekonomi (90 Menit)</p>
                 </div>
             </div>
             <div id="headerTimer" class="hidden items-center bg-indigo-800 px-3 py-1.5 rounded-lg border border-indigo-600">
                 <i class="far fa-clock text-amber-400 mr-2"></i>
-                <span id="timerDisplay" class="font-mono font-bold text-sm">60:00</span>
+                <span id="timerDisplay" class="font-mono font-bold text-sm">90:00</span>
             </div>
         </div>
     </header>
@@ -89,7 +89,7 @@
                 <input type="hidden" id="scriptUrl" value="https://script.google.com/macros/s/AKfycbygxp4k38a4whpeD_kOmTbNB-SAAoB48GCHMBFtoKfOWFXCukxwcrvvr9VzKMMpMsY/exec">
 
                 <button type="submit" id="btnStartQuiz" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg shadow-sm transition duration-200 flex items-center justify-center space-x-2">
-                    <span>Mulai Ulangan</span>
+                    <span>Mulai Ulangan (90 Menit)</span>
                     <i class="fas fa-arrow-right text-sm"></i>
                 </button>
             </form>
@@ -159,7 +159,7 @@
             </div>
         </div>
 
-        <!-- 3. Halaman Hasil Ringkas (Tanpa Pembahasan) -->
+        <!-- 3. Halaman Hasil Ringkas -->
         <div id="resultSection" class="hidden max-w-xl mx-auto space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 text-center">
                 <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
@@ -229,6 +229,7 @@
     <script>
         // TOKEN KHUSUS GURU
         const SECRET_TEACHER_TOKEN = "GURU2026";
+        const TOTAL_DURATION_SECONDS = 90 * 60; // 90 Menit
 
         // Data 40 Soal Ekonomi Kelas X
         const questionsData = [
@@ -279,7 +280,7 @@
         let userAnswers = new Array(questionsData.length).fill(null);
         let studentData = {};
         let timerInterval = null;
-        let timeLeft = 60 * 60; // 60 menit
+        let startTime = null; // Timestamp saat kuis dimulai
 
         // Periksa pengerjaan sebelumnya
         function checkPreviousAttempt(kelas, absen) {
@@ -359,7 +360,7 @@
                 studentData,
                 currentQuestion,
                 userAnswers,
-                timeLeft
+                startTime
             };
             localStorage.setItem('active_quiz_session', JSON.stringify(sessionData));
         }
@@ -373,7 +374,17 @@
                     studentData = data.studentData;
                     currentQuestion = data.currentQuestion || 0;
                     userAnswers = data.userAnswers || new Array(questionsData.length).fill(null);
-                    timeLeft = data.timeLeft || 3600;
+                    startTime = data.startTime || Date.now();
+
+                    // Hitung sisa waktu berdasarkan timestamp aktual
+                    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                    const remainingSeconds = TOTAL_DURATION_SECONDS - elapsedSeconds;
+
+                    if (remainingSeconds <= 0) {
+                        alert("Waktu pengerjaan Anda telah habis saat halaman dimuat ulang!");
+                        submitQuiz();
+                        return;
+                    }
 
                     document.getElementById('identitasSection').classList.add('hidden');
                     document.getElementById('quizSection').classList.remove('hidden');
@@ -407,6 +418,7 @@
             }
 
             studentData = { nama, kelas, absen, scriptUrl };
+            startTime = Date.now();
             saveCurrentSession();
 
             document.getElementById('identitasSection').classList.add('hidden');
@@ -419,24 +431,30 @@
             startTimer();
         }
 
-        // Timer
+        // Timer Presisi berdasarkan Timestamp
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                saveCurrentSession();
+            
+            function updateTimerDisplay() {
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                const remainingSeconds = TOTAL_DURATION_SECONDS - elapsedSeconds;
 
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timerDisplay').innerText = "00:00";
+                    alert("Waktu ulangan 90 menit telah habis! Jawaban Anda akan dikirimkan otomatis.");
+                    submitQuiz();
+                    return;
+                }
+
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
                 document.getElementById('timerDisplay').innerText = 
                     `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
 
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    alert("Waktu ulangan telah habis! Jawaban Anda akan dikirimkan otomatis.");
-                    submitQuiz();
-                }
-            }, 1000);
+            updateTimerDisplay();
+            timerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
         // Render Grid Nomor Soal
@@ -545,7 +563,7 @@
             }
         }
 
-        // Kirim Jawaban & Hitung Skor (Tanpa Menampilkan Review)
+        // Kirim Jawaban & Hitung Skor
         function submitQuiz() {
             clearInterval(timerInterval);
 
