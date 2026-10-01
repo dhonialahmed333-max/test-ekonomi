@@ -37,14 +37,23 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
 
-        <!-- 1. Form Identitas Siswa -->
+        <!-- 1. Form Identitas Siswa + Pemutar Video GitHub -->
         <div id="identitasSection" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+            
+            <!-- VIDEO INSTRUKSI DARI REPOSITORI GITHUB (video.mp4) -->
+            <div class="mb-5 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-black">
+                <video controls playsinline class="w-full h-auto rounded-xl">
+                    <source src="video.mp4" type="video/mp4">
+                    Browser Anda tidak mendukung pemutar video.
+                </video>
+            </div>
+
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
                     <i class="fas fa-user-graduate"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-800">Identitas Peserta Ulangan</h2>
-                <p class="text-xs text-slate-500 mt-1">Silakan isi data diri Anda dengan benar sebelum memulai.</p>
+                <p class="text-xs text-slate-500 mt-1">Silakan tonton video penjelasannya terlebih dahulu, lalu isi data diri Anda untuk memulai ulangan.</p>
             </div>
 
             <!-- Pesan Blokir Pengerjaan Ulang -->
@@ -227,11 +236,9 @@
     </div>
 
     <script>
-        // TOKEN KHUSUS GURU
         const SECRET_TEACHER_TOKEN = "GURU2026";
         const TOTAL_DURATION_SECONDS = 90 * 60; // 90 Menit
 
-        // Data 40 Soal Ekonomi Kelas X
         const questionsData = [
             { id: 1, text: "Kata 'Ekonomi' berasal dari bahasa Yunani, yaitu Oikonomia, yang terdiri dari kata Oikos dan Nomos. Kata Oikos berarti ...", options: ["A. Aturan atau hukum", "B. Rumah tangga", "C. Kemakmuran", "D. Pengelolaan", "E. Kebutuhan"], answer: 1 },
             { id: 2, text: "Masalah pokok ekonomi yang dihadapi manusia pada dasarnya muncul karena ...", options: ["A. Kebutuhan manusia terbatas, sedangkan alat pemuas terbatas", "B. Kebutuhan manusia terbatas, sedangkan alat pemuas tidak terbatas", "C. Kebutuhan manusia tidak terbatas, sedangkan alat pemuas terbatas", "D. Kebutuhan manusia tidak terbatas, sedangkan alat pemuas tidak terbatas", "E. Pendapatan manusia selalu bertambah"], answer: 2 },
@@ -275,14 +282,12 @@
             { id: 40, text: "Prinsip utama dalam ilmu Ekonomi Syariah yang membedakannya secara mendasar dari ekonomi konvensional adalah ...", options: ["A. Mengejar keuntungan tanpa batasan modal", "B. Larangan riba, larangan gharar (ketidakpastian), dan penerapan prinsip keadilan/bagi hasil", "C. Penentuan seluruh harga sepenuhnya oleh otoritas pemerintah pusat", "D. Penghapusan hak milik pribadi atas alat produksi", "E. Penolakan terhadap perdagangan internasional"], answer: 1 }
         ];
 
-        // State Aplikasi
         let currentQuestion = 0;
         let userAnswers = new Array(questionsData.length).fill(null);
         let studentData = {};
         let timerInterval = null;
-        let startTime = null; // Timestamp saat kuis dimulai
+        let startTime = null;
 
-        // Periksa pengerjaan sebelumnya
         function checkPreviousAttempt(kelas, absen) {
             const key = `completed_quiz_${kelas}_${absen}`;
             return localStorage.getItem(key) !== null;
@@ -323,7 +328,6 @@
         document.getElementById('kelasSiswa').addEventListener('change', checkIdentityAvailability);
         document.getElementById('absenSiswa').addEventListener('input', checkIdentityAvailability);
 
-        // Modal Token Guru
         function openTokenModal() {
             document.getElementById('inputTokenGuru').value = '';
             document.getElementById('tokenErrorMsg').classList.add('hidden');
@@ -354,7 +358,6 @@
             }
         }
 
-        // Simpan Sesi Kuis ke LocalStorage agar tidak hilang saat Refresh
         function saveCurrentSession() {
             const sessionData = {
                 studentData,
@@ -365,7 +368,6 @@
             localStorage.setItem('active_quiz_session', JSON.stringify(sessionData));
         }
 
-        // Restore Sesi jika ada
         function restoreSessionIfExist() {
             const savedSession = localStorage.getItem('active_quiz_session');
             if (savedSession) {
@@ -376,7 +378,6 @@
                     userAnswers = data.userAnswers || new Array(questionsData.length).fill(null);
                     startTime = data.startTime || Date.now();
 
-                    // Hitung sisa waktu berdasarkan timestamp aktual
                     const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
                     const remainingSeconds = TOTAL_DURATION_SECONDS - elapsedSeconds;
 
@@ -400,7 +401,6 @@
             }
         }
 
-        // Mulai Ulangan
         function startQuiz() {
             const nama = document.getElementById('namaSiswa').value.trim();
             const kelas = document.getElementById('kelasSiswa').value;
@@ -431,7 +431,6 @@
             startTimer();
         }
 
-        // Timer Presisi berdasarkan Timestamp
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
             
@@ -457,7 +456,6 @@
             timerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
-        // Render Grid Nomor Soal
         function renderQuestionGrid() {
             const grid = document.getElementById('questionGrid');
             grid.innerHTML = '';
@@ -489,7 +487,6 @@
             });
         }
 
-        // Load Soal
         function loadQuestion(idx) {
             currentQuestion = idx;
             saveCurrentSession();
@@ -563,7 +560,6 @@
             }
         }
 
-        // Kirim Jawaban & Hitung Skor
         function submitQuiz() {
             clearInterval(timerInterval);
 
@@ -576,7 +572,6 @@
 
             const percentage = Math.round((scoreCount / questionsData.length) * 100);
 
-            // Kunci pengerjaan tunggal & bersihkan sesi sementara
             markAttemptComplete(studentData.kelas, studentData.absen);
             localStorage.removeItem('active_quiz_session');
 
@@ -589,7 +584,6 @@
             document.getElementById('resSkor').innerText = `${scoreCount} / ${questionsData.length}`;
             document.getElementById('resNilai').innerText = percentage;
 
-            // Kirim Payload Data ke Google Apps Script Spreadsheet Guru
             if (studentData.scriptUrl) {
                 const payload = {
                     nama: studentData.nama,
@@ -608,7 +602,6 @@
             }
         }
 
-        // Jalankan Pemulihan Sesi Saat Pertama Kali Membuka Halaman
         window.addEventListener('DOMContentLoaded', restoreSessionIfExist);
     </script>
 </body>
