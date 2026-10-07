@@ -315,7 +315,6 @@
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
-                        // Jika diblokir autoplay browser, jalankan suara pada sentuhan/klik pertama
                         const enableAudio = () => {
                             video.muted = false;
                             video.play();
@@ -326,6 +325,17 @@
                         document.addEventListener('touchstart', enableAudio);
                     });
                 }
+            }
+        }
+
+        // FUNGSI MENGHENTIKAN KESELURUHAN VIDEO DAN SUARA SAMPAI TUNTAS
+        function stopAndKillVideo() {
+            const video = document.getElementById('instructionVideo');
+            if (video) {
+                video.pause();           // Hentikan pemutaran
+                video.currentTime = 0;   // Reset durasi ke detik ke-0
+                video.src = "";          // Lepas sumber file video agar audio/buffering mati total
+                video.load();            // Muat ulang elemen video kosong
             }
         }
 
@@ -465,6 +475,9 @@
                         return;
                     }
 
+                    // Hentikan video saat memulihkan sesi aktif pengerjaan
+                    stopAndKillVideo();
+
                     document.getElementById('identitasSection').classList.add('hidden');
                     document.getElementById('quizSection').classList.remove('hidden');
                     document.getElementById('headerTimer').classList.remove('hidden');
@@ -500,9 +513,8 @@
             studentData = { nama, kelas, absen, scriptUrl };
             startTime = Date.now();
 
-            // Hentikan video saat kuis dimulai
-            const video = document.getElementById('instructionVideo');
-            if (video) video.pause();
+            // MATIKAN TOTAL VIDEO DAN SUARA SAAT SISWA MASUK KE SOAL
+            stopAndKillVideo();
 
             // Mengacak urutan 40 soal khusus untuk sesi pengerjaan siswa ini
             questionsData = shuffleArray(rawQuestionsData);
